@@ -1,0 +1,197 @@
+services:
+
+  # =========================
+  # PostgreSQL
+  # =========================
+  postgres:
+    image: postgres:15
+    container_name: travel_postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # =========================
+  # Redis
+  # =========================
+  redis:
+    image: redis:7
+    container_name: travel_redis
+    ports:
+      - "6379:6379"
+
+  # =========================
+  # RabbitMQ
+  # =========================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # =========================
+  # API Gateway
+  # =========================
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - inventory-service
+      - booking-service
+      - search-service
+      - user-service
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:4001
+      INVENTORY_SERVICE_URL: http://inventory-service:4002
+      BOOKING_SERVICE_URL: http://booking-service:4003
+      SEARCH_SERVICE_URL: http://search-service:4004
+      USER_SERVICE_URL: http://user-service:4006
+      PORT: 3000
+      JWT_SECRET: 9fK3vLmP2xQ8tY7aZ4rN6sW1cH5bJ0eR8uD3kL9mV2pX7qT6
+
+  # =========================
+  # Auth Service
+  # =========================
+  auth-service:
+    build: ./services/auth-service
+    container_name: auth_service
+    ports:
+      - "4001:4001"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: auth_db
+      DB_PORT: 5432
+      USER_SERVICE_URL: http://user-service:4006
+      JWT_SECRET: 9fK3vLmP2xQ8tY7aZ4rN6sW1cH5bJ0eR8uD3kL9mV2pX7qT6
+
+  # =========================
+  # User Service
+  # =========================
+  user-service:
+    build: ./services/user-service
+    container_name: user_service
+    ports:
+      - "4006:4006"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: user_db
+      DB_PORT: 5432
+
+  # =========================
+  # Inventory Service
+  # =========================
+  inventory-service:
+    build: ./services/inventory-service
+    container_name: inventory_service
+    ports:
+      - "4002:4002"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: inventory_db
+      DB_PORT: 5432
+
+  # =========================
+  # Search Service
+  # =========================
+  search-service:
+    build: ./services/search-service
+    container_name: search_service
+    ports:
+      - "4004:4004"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: inventory_db
+      REDIS_HOST: redis
+      INVENTORY_SERVICE_URL: http://inventory-service:4002
+
+  # =========================
+  # Booking Service
+  # =========================
+  booking-service:
+    build: ./services/booking-service
+    container_name: booking_service
+    ports:
+      - "4003:4003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: booking_db
+      DB_PORT: 5432
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      INVENTORY_SERVICE_URL: http://inventory-service:4002
+
+  # =========================
+  # Notification Service
+  # =========================
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      DB_HOST: postgres
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: notification_db
+      DB_PORT: 5432
+
+  # =========================
+  # Client
+  # =========================
+  client:
+    build: ./client
+    container_name: travel_client
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

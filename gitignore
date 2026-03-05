@@ -1,0 +1,29 @@
+# =======================
+# Node / React
+# =======================
+client/node_modules/
+client/dist/
+client/.env
+services/*/node_modules/
+services/*/dist/
+services/*/.env
+api-gateway/node_modules/
+api-gateway/.env
+
+# =======================
+# Docker
+# =======================
+*.docker
+*.env
+
+# =======================
+# Logs
+# =======================
+*.log
+
+# =======================
+# IDE / OS
+# =======================
+.vscode/
+.DS_Store
+.idea/
