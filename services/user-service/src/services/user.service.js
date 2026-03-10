@@ -31,3 +31,8 @@ export const createUser = async (userData) => {
 
   return response.rows[0]; // ONLY this
 };
+
+export const getAllUsers = async () => {
+  const result = await pool.query("SELECT * FROM users ORDER BY id DESC");
+  return result.rows;
+};

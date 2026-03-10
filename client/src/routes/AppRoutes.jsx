@@ -16,6 +16,13 @@ import BookingPage from "../pages/BookingPage";
 import MyBookings from "../pages/MyBookings";
 import AdminDashboard from "../pages/AdminDashboard";
 
+import ManageFlights from "../pages/admin/ManageFlights";
+import ManageBookings from "../pages/admin/ManageBookings";
+import ManageUsers from "../pages/admin/ManageUsers";
+import Analytics from "../pages/admin/Analytics";
+import Payments from "../pages/admin/Payments";
+import Settings from "../pages/admin/Settings";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -73,6 +80,72 @@ function AppRoutes() {
           }
         />
       </Route>
+
+      <Route
+        path="/admin/flights"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManageFlights />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/bookings"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManageBookings />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <ManageUsers />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <Analytics />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/payments"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <Payments />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute>
+            <AdminRoute>
+              <Settings />
+            </AdminRoute>
+          </ProtectedRoute>
+        }
+      />
 
       {/* -------------------- DEFAULT ROUTE -------------------- */}
       <Route path="/" element={<Navigate to="/home" replace />} />
